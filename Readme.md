@@ -1,32 +1,42 @@
-# DevOps Intern Assignment
+# 🚀 DevOps Intern Assessment Project
 
-A complete DevOps Intern project demonstrating application containerization, Docker Compose, GitHub Actions CI automation, Docker Hub image publishing, and Linux system health monitoring.
+> A production-ready demonstration of application containerization, local orchestration, CI/CD automation, and automated Linux system health monitoring.
 
-## Project Overview
+---
 
-This project implements a lightweight Node.js web application and an automated Docker-based CI pipeline.
+[![Node.js](https://img.shields.io/badge/Node.js-v22.x-339933?style=flat-square&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com/)
+[![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-Automated_CI-2088FF?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/features/actions)
+[![Linux Bash](https://img.shields.io/badge/Linux-Bash_Monitoring-4EAA25?style=flat-square&logo=gnubash&logoColor=white)](https://www.gnu.org/software/bash/)
 
-### Objectives
+---
 
-- Develop a minimal REST API.
-- Containerize the application using Docker.
-- Run the application using Docker Compose.
-- Validate application code using GitHub Actions.
-- Build and publish Docker images to Docker Hub.
-- Automate Linux CPU, memory, and disk monitoring using Bash.
-- Maintain timestamped system health logs.
+## 📌 Project Overview
 
-## Technology Stack
+This project showcases a lightweight **Node.js REST API** packaged into a optimized Docker container, managed locally via **Docker Compose**, and continuously validated using **GitHub Actions CI/CD**. Additionally, it features a custom **Bash system monitor** for tracking host system health metrics.
 
-| Technology | Purpose |
-|---|---|
-| Node.js 22 | Web application |
-| Docker | Application containerization |
-| Docker Compose | Local container orchestration |
-| GitHub Actions | CI automation |
-| Docker Hub | Container image registry |
-| Linux / Bash | System monitoring |
-| Git | Version control |
+### 🎯 Key Objectives
+
+* **Application Development:** Build a clean, minimal RESTful API service.
+* **Containerization:** Write an optimized, multi-stage `Dockerfile`.
+* **Orchestration:** Configure `docker-compose.yml` for unified local management.
+* **Continuous Integration:** Automate testing, linting, and building via GitHub Actions.
+* **Registry Publishing:** Automatically build and push verified images to **Docker Hub**.
+* **System Observability:** Implement a Bash daemon script to track CPU, Memory, and Disk utilization with timestamped logging.
+
+---
+
+## 🛠️ Technology Stack
+
+| Domain | Technology | Core Purpose |
+| :--- | :--- | :--- |
+| **Runtime** | `Node.js 22` | Web API application server |
+| **Containerization** | `Docker` | Application environment isolation |
+| **Orchestration** | `Docker Compose` | Multi-container local management |
+| **CI/CD Pipeline** | `GitHub Actions` | Automated build, test, and push workflows |
+| **Registry** | `Docker Hub` | Public/Private container image repository |
+| **Monitoring** | `Linux / Bash` | Automated host resource health logging |
+| **VCS** | `Git` | Source code version control |
 
 ## Project Structure
 
@@ -35,7 +45,8 @@ devops-intern-task/
 │
 ├── src/
 │   └── server.js
-│
+├── test/
+│   └── server.test.js
 ├── scripts/
 │   └── system_health.sh
 │
@@ -356,15 +367,15 @@ Docker images are published with multiple tags:
 - Implement container image rollback.
 - Add automated testing to the CI pipeline.
 
-## Author
+
+## 👤 Author
 
 **Joni Miah**
 
-GitHub: https://github.com/Abdullah1906/devops-intern-task
-
-Docker Hub: https://hub.docker.com/repository/docker/abdullah1438/devops-intern-task
+* 🐙 **GitHub:** [@Abdullah1906](https://github.com/Abdullah1906) | [Repository](https://github.com/Abdullah1906/devops-intern-task)
+* 🐳 **Docker Hub:** [@abdullah1438](https://hub.docker.com/u/abdullah1438) | [Image Repository](https://hub.docker.com/repository/docker/abdullah1438/devops-intern-task)
 
 ---
 
-**Project Status:** Completed — Application, Containerization, CI Pipeline, Docker Hub Publishing, and Linux System Monitoring.
+**Project Status:** ✅ Completed — Application, Containerization, CI Pipeline, Docker Hub Publishing, and Linux System Monitoring.
 
