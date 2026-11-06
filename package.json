@@ -5,8 +5,10 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "lint": "node --check src/server.js"
+    "lint": "node --check src/server.js && node --check test/server.test.js",
+    "test": "node --test"
   },
+  
   "engines": {
     "node": ">=22"
   }
