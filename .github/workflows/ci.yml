@@ -1,7 +1,13 @@
-name: DevOps Intern CI Pipeline
+name: DevOps CI Pipeline
 
 on:
   push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+
+  pull_request:
     branches:
       - main
 
@@ -12,50 +18,83 @@ permissions:
 
 jobs:
 
-  build-and-push:
+  build-test-scan-push:
 
-    name: Validate, Build and Push Docker Image
-
+    name: Test, Scan and Publish
     runs-on: ubuntu-latest
+
+    env:
+      IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/devops-intern-task
 
     steps:
 
-      # Step 1: Checkout source code
+      # 1. Checkout
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Step 2: Setup Node.js
+      # 2. Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
 
-      # Step 3: Install dependencies
+      # 3. Install dependencies
       - name: Install Dependencies
         run: npm ci
 
-      # Step 4: Code validation
+      # 4. Code validation
       - name: Run Code Checks
         run: npm run lint
 
-      # Step 5: Setup Docker Buildx
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      # 5. Automated testing
+      - name: Run Automated Tests
+        run: npm test
 
-      # Step 6: Login to Docker Hub
+      # 6. Build Docker image locally
+      - name: Build Docker Image
+        run: |
+          docker build \
+            -t "$IMAGE_NAME:$GITHUB_SHA" .
+
+      # 7. Security scanning
+      - name: Run Trivy Security Scan
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/devops-intern-task:${{ github.sha }}
+          format: table
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: CRITICAL,HIGH
+
+      # 8. Docker Hub Login
       - name: Login to Docker Hub
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Step 7: Build and Push Docker Image
-      - name: Build and Push Docker Image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/devops-intern-task:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/devops-intern-task:${{ github.sha }}
+      # 9. Push verified images
+      - name: Push Docker Images
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+        run: |
+
+          # Always publish immutable commit SHA
+          docker push "$IMAGE_NAME:$GITHUB_SHA"
+
+          # Publish latest only from main
+          if [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
+            docker tag "$IMAGE_NAME:$GITHUB_SHA" "$IMAGE_NAME:latest"
+            docker push "$IMAGE_NAME:latest"
+          fi
+
+          # Publish semantic release tag
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            VERSION="$GITHUB_REF_NAME"
+
+            docker tag "$IMAGE_NAME:$GITHUB_SHA" "$IMAGE_NAME:$VERSION"
+
+            docker push "$IMAGE_NAME:$VERSION"
+          fi
