@@ -6,20 +6,16 @@ on:
       - main
     tags:
       - 'v*'
-
   pull_request:
     branches:
       - main
-
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-
   build-test-scan-push:
-
     name: Test, Scan and Publish
     runs-on: ubuntu-latest
 
@@ -27,74 +23,63 @@ jobs:
       IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/devops-intern-task
 
     steps:
-
-      # 1. Checkout
+     
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # 2. Setup Node.js
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
         with:
-          node-version: 22
-          cache: npm
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=semver,pattern={{version}}
 
-      # 3. Install dependencies
-      - name: Install Dependencies
-        run: npm ci
+    
+      - name: Build Docker Image for Testing & Scanning
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          load: true
+          tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      # 4. Code validation
-      - name: Run Code Checks
-        run: npm run lint
-
-      # 5. Automated testing
-      - name: Run Automated Tests
-        run: npm test
-
-      # 6. Build Docker image locally
-      - name: Build Docker Image
-        run: |
-          docker build \
-            -t "$IMAGE_NAME:$GITHUB_SHA" .
-
-      # 7. Security scanning
+      
       - name: Run Trivy Security Scan
         uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/devops-intern-task:${{ github.sha }}
+          image-ref: ${{ env.IMAGE_NAME }}:${{ github.sha }}
           format: table
           exit-code: '1'
           ignore-unfixed: true
           vuln-type: os,library
           severity: CRITICAL,HIGH
 
-      # 8. Docker Hub Login
+
       - name: Login to Docker Hub
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+        if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 9. Push verified images
-      - name: Push Docker Images
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
-        run: |
 
-          # Always publish immutable commit SHA
-          docker push "$IMAGE_NAME:$GITHUB_SHA"
-
-          # Publish latest only from main
-          if [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
-            docker tag "$IMAGE_NAME:$GITHUB_SHA" "$IMAGE_NAME:latest"
-            docker push "$IMAGE_NAME:latest"
-          fi
-
-          # Publish semantic release tag
-          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
-            VERSION="$GITHUB_REF_NAME"
-
-            docker tag "$IMAGE_NAME:$GITHUB_SHA" "$IMAGE_NAME:$VERSION"
-
-            docker push "$IMAGE_NAME:$VERSION"
-          fi
+      - name: Push Docker Image
+        if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
