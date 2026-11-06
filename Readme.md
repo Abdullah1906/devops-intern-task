@@ -45,8 +45,13 @@ devops-intern-task/
 │
 ├── src/
 │   └── server.js
+│
 ├── test/
 │   └── server.test.js
+│
+├── docs/
+│   └── ci-cd-workflow.png
+│
 ├── scripts/
 │   └── system_health.sh
 │
